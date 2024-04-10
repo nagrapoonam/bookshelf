@@ -1,7 +1,8 @@
 import bson
 import os
+import time
 from dotenv import load_dotenv
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for, redirect, flash, session
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
@@ -21,54 +22,79 @@ collection: Collection = database.get_collection("books")
 #instantiate
 app: Flask = Flask(__name__)
 
+# Set a secret key for the session
+app.secret_key = 'your_secret_key_here'
+
 @app.route('/')
 def index():
     return render_template("index.html")
 
-#CREATE AND READ
-@app.route("/books", methods=["GET","POST"])
-def books():
-    if request.method == "POST":
-        #CREATE
-        book: str = request.json["book"]
-        pages: str = request.json["pages"]
+@app.route('/home')
+def home():
+    books = collection.find()
+    return render_template('home.html', books=books)
 
-        #insert new book into book collection in ATLAS
-        collection.insert_one({"book":book, "pages":pages})
+@app.route('/books', methods=['GET', 'POST'])
+def add_book():
+    if request.method == 'POST':
+        book_name = request.form.get('bookName')
+        pages = int(request.form.get('pages'))
 
-        return f"CREATE: your book {book} ({pages}pages) has been added to your bookshelf."
+        # Check if the book already exists in the database
+        existing_book = collection.find_one({'book': book_name})
+        if existing_book:
+            flash('Book already exists in the database', 'error')
+        else:
+            collection.insert_one({'book': book_name, 'pages': pages})
+            flash('Book added successfully', 'success')
 
-    elif request.method == "GET":
-        #READ
-        bookshelf = list(collection.find())
-        novels = []
-
-        for titles in bookshelf:
-            book = titles["book"]
-            pages = titles["pages"]
-            shelf = {"book":book, "pages":pages}
-            novels.insert(0, shelf)
-        return  novels
-
-
-#UPDATE
-@app.route("/books/<string:book_id>", methods=["PUT"])
-def update_book(book_id: str):
-    new_book: str = request.json["book"]
-    new_pages: str = request.json["pages"]
-    collection.update_one({"_id":bson.ObjectId(book_id)}, {"$set":{"book":new_book, "pages":new_pages}})
-    return f"UPDATE: Your book has been updated to: {new_book} ({new_pages}pages)."
+        # Regardless of whether the book was added or not, stay on the add_book route
+        return redirect(url_for('add_book'))  # Redirect back to add.html
+    else:
+        return render_template('add.html')
 
 
+@app.route('/update', methods=['GET', 'POST'])
+def update_book():
+    if request.method == 'POST':
+        # Get data from the form
+        old_book_name = request.form.get('oldBookName')
+        new_book_name = request.form.get('newBookName')
+        new_pages = int(request.form.get('newPages'))
 
-#DELETE
-@app.route("/books/<string:book_id>", methods=["DELETE"])
-def remove_book(book_id:str):
-    collection.delete_one({"_id": bson.ObjectId(book_id)})
+        # Update the book in the database
+        result = collection.update_one({'book': old_book_name}, {
+            '$set': {'book': new_book_name, 'pages': new_pages}})
+        if result.modified_count > 0:
+            flash('Book updated successfully', 'success')
+        else:
+            flash('Book not found', 'error')
 
-    return f"DELETE: Your book (id = {book_id}) has been removed from your bookshelf."
+        # Regardless of whether the book was updated or not, stay on the update_book route
+        return redirect(url_for('update_book'))  # Redirect back to update.html
+    else:
+        return render_template('update.html')
 
 
+@app.route('/delete', methods=['GET', 'POST'])
+def delete_book():
+    if request.method == 'POST':
+        # Get data from the form
+        book_name = request.form.get('bookName')
+
+        # Check if the book exists in the database
+        existing_book = collection.find_one({'book': book_name})
+        if existing_book:
+            # Delete the book from the database
+            collection.delete_one({'book': book_name})
+            flash(f'Book "{book_name}" deleted successfully', 'success')
+        else:
+            flash(f'Book "{book_name}" does not exist', 'error')
+
+        # Regardless of whether the book was deleted or not, stay on the delete_book route
+        return redirect(url_for('delete_book'))  # Redirect back to delete.html
+    else:
+        return render_template('delete.html')
 
 
 if __name__ == "__main__":

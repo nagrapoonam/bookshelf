@@ -4,23 +4,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bookshelf</title>
+    <title>Delete Book</title>
     <!-- Bootstrap CSS -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-<!--    <img class="image" src="{{ url_for('static', filename='/images/logo7.jpeg') }}">-->
+
     <style>
         body {
-            background-image: url('{{ url_for('static', filename='images/background.jpg') }}');
+            background-image: url('{{ url_for('static', filename='images/delete.jpg') }}');
             background-size: cover;
             background-repeat: no-repeat;
             background-attachment: fixed;
+            color: white; /* Set text color to white for better visibility */
         }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <a class="navbar-brand" href="/">Bookshelf</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
             aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,6 +43,24 @@
             </ul>
         </div>
     </nav>
+
+    <div class="container mt-5">
+        <h1>Delete Book</h1>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <div class="alert alert-{{ messages[1] }}" role="alert">
+                    {{ messages[0] }}
+                </div>
+            {% endif %}
+        {% endwith %}
+        <form method="post" action="/delete">
+            <div class="form-group">
+                <label for="bookName">Enter Name of the Book to Delete</label>
+                <input type="text" class="form-control col-sm-6" id="bookName" name="bookName" required>
+            </div>
+            <button type="submit" class="btn btn-danger">Delete Book</button>
+        </form>
+    </div>
 
     <!-- Bootstrap JS and dependencies (jQuery and Popper.js) -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
