@@ -1,7 +1,8 @@
 import bson
 import os
 import time
-import pyrebase
+# import pyrebase
+from pyrebase import pyrebase
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, url_for, redirect, flash, session
 from pymongo import MongoClient
