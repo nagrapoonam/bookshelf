@@ -2,6 +2,7 @@ import bson
 import os
 import time
 # import pyrebase
+import requests
 from pyrebase import pyrebase
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, url_for, redirect, flash, session
@@ -32,6 +33,16 @@ config = {
     'measurementId': "G-1TCH9064JZ",
     'databaseURL': ""
 }
+
+# const firebaseConfig = {
+#     apiKey: "AIzaSyC5tN1JcL2QbPtuw7DncuvZegkLF5IzwHo",
+#     authDomain: "bookshelf-4a75d.firebaseapp.com",
+#     projectId: "bookshelf-4a75d",
+#     storageBucket: "bookshelf-4a75d.appspot.com",
+#     messagingSenderId: "443099329166",
+#     appId: "1:443099329166:web:148dbd877c3bc880284fdf",
+#     measurementId: "G-S9MPBP1639"
+#   };
 
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
@@ -150,6 +161,14 @@ def register():
                 flash('Account created successfully', 'success')
                 return redirect(url_for(
                     'login'))  # Redirect to the login page after successful registration
+        except requests.exceptions.HTTPError as e:
+            error_data = e.args[0].response.json()
+            error_message = error_data['error']['message']
+            if 'WEAK_PASSWORD' in error_message:
+                flash('Password should be at least 6 characters', 'error')
+            else:
+                flash(error_message, 'error')
+            return redirect(url_for('register'))
         except Exception as e:
             flash(str(e),
                   'error')  # Display error message if registration fails
