@@ -34,15 +34,6 @@ config = {
     'databaseURL': ""
 }
 
-# const firebaseConfig = {
-#     apiKey: "AIzaSyC5tN1JcL2QbPtuw7DncuvZegkLF5IzwHo",
-#     authDomain: "bookshelf-4a75d.firebaseapp.com",
-#     projectId: "bookshelf-4a75d",
-#     storageBucket: "bookshelf-4a75d.appspot.com",
-#     messagingSenderId: "443099329166",
-#     appId: "1:443099329166:web:148dbd877c3bc880284fdf",
-#     measurementId: "G-S9MPBP1639"
-#   };
 
 firebase = pyrebase.initialize_app(config)
 auth = firebase.auth()
